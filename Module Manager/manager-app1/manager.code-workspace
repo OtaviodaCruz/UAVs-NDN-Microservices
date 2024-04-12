@@ -1,0 +1,30 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		},
+		{
+			"path": "../../../../../../Python tests"
+		},
+		{
+			"path": "../../../../../Prometheus"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"*.ipp": "cpp",
+			"functional": "cpp",
+			"array": "cpp",
+			"deque": "cpp",
+			"list": "cpp",
+			"vector": "cpp",
+			"string_view": "cpp",
+			"iosfwd": "cpp",
+			"coroutine": "cpp",
+			"bitset": "cpp",
+			"initializer_list": "cpp",
+			"regex": "cpp",
+			"utility": "cpp"
+		}
+	}
+}

@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+    body {
+        width: 100%;
+        margin: auto;
+        text-align: center;
+    }
+
+    #network {
+        width: 100%;
+        height: 720px;
+        border: black 1px solid;
+        margin: auto;
+    }
+
+    .half {
+        width: 50%;
+        float: left;
+    }
+
+</style>
+<div class="half">
+    <h1>Network Topology</h1><br/>
+    <div id="network"></div>
+    <input id="refresh" type="button" value="refresh"/><input id="auto_refresh" type="button" value="auto: off"/>
+</div>
+<div class="half">
+    <h1>API</h1><br/>
+    <form id="new_node">
+        <fieldset>
+            <legend>New node</legend>
+            Node type:
+            <select name="type" required>
+                <option value="cs">Content Store</option>
+                <option value="br">Backward Router</option>
+                <option value="nr">Named Router</option>
+                <option value="sr">Strategy router</option>
+            </select>
+            <input type="submit" value="Send"/><br/>
+            <fieldset>
+                <legend>Result</legend>
+                <p class="result"></p>
+            </fieldset>
+        </fieldset>
+    </form>
+
+    <form id="get_node">
+        <fieldset>
+            <legend>Get node info</legend>
+            Node name: <input type="text" name="name" required/>
+            <input type="submit" value="Send"/><br/>
+            <fieldset>
+                <legend>Result</legend>
+                <p class="result"></p>
+            </fieldset>
+        </fieldset>
+    </form>
+
+    <form id="del_node">
+        <fieldset>
+            <legend>Remove node</legend>
+            Node name: <input type="text" name="name" required/>
+            <input type="submit" value="Send"/><br/>
+            <fieldset>
+                <legend>Result</legend>
+                <p class="result"></p>
+            </fieldset>
+        </fieldset>
+    </form>
+
+    <form id="update_node_config">
+        <fieldset>
+            <legend>Update node config (you may fill only part of the form)</legend>
+            Node name: <input type="text" name="name" required/>
+            Manager address: <input type="text" name="manager_address"/><br/>
+            Manager port: <input type="text" name="manager_port"/>
+            Report delay: <input type="text" name="report_each"/><br/>
+            Strategy type :
+            <select name="strategy_type" required>
+                <option value="multicast">multicast</option>
+                <option value="loadbalancing">load balancing</option>
+                <option value="failover">failover</option>
+            </select>
+            <input type="submit" value="Send"/><br/>
+            <fieldset>
+                <legend>Result</legend>
+                <p class="result"></p>
+            </fieldset>
+        </fieldset>
+    </form>
+
+    <form id="new_link">
+        <fieldset>
+            <legend>New link</legend>
+            Source node: <input type="text" name="source" required/>
+            Target node: <input type="text" name="target" required/>
+            <input type="submit" value="Send" />
+            <fieldset>
+                <legend>Result</legend>
+                <p class="result"></p>
+            </fieldset>
+        </fieldset>
+    </form>
+
+    <form id="get_link">
+        <fieldset>
+            <legend>Get link info</legend>
+            Source node: <input type="text" name="source" required/>
+            Target node: <input type="text" name="target" required/>
+            <input type="submit" value="Send" />
+            <fieldset>
+                <legend>Result</legend>
+                <p class="result"></p>
+            </fieldset>
+        </fieldset>
+    </form>
+
+    <form id="del_link">
+        <fieldset>
+            <legend>Remove link</legend>
+            Source node: <input type="text" name="source" required/>
+            Target node: <input type="text" name="target" required/>
+            <input type="submit" value="Send" />
+            <fieldset>
+                <legend>Result</legend>
+                <p class="result"></p>
+            </fieldset>
+        </fieldset>
+    </form>
+
+    <form id="scale_node">
+        <fieldset>
+            <legend>Scale node</legend>
+            Node name: <input type="text" name="name" required/>
+            Number: <input type="text" name="number" required/>
+            <input type="submit" value="Send" />
+            <fieldset>
+                <legend>Result</legend>
+                <p class="result"></p>
+            </fieldset>
+        </fieldset>
+    </form>
+</div>
+<script src="./jquery-3.3.1.js"></script>
+<script src="./d3.v3.min.js"></script>
+<script src="./jsnetworkx.js"></script>
+<script type="application/javascript">
+    $(document).ready(function () {
+        function genGraph() {
+            $.getJSON("./api/graph", function (data) {
+                var graph = new jsnx.DiGraph();
+                data["nodes"].forEach(function (e) {
+                    graph.addNode(e["id"], {type: e["type"]});
+                });
+                data["links"].forEach(function (e) {
+                    graph.addEdge(e["source"], e["target"], {face_id: e["face_id"]});
+                });
+                
+                var colors = {"CS": "#66cdaa", "BR": "#ff7373", "NR":"#3399ff", "SR": "#ffd700"}
+
+                jsnx.draw(graph, {
+                    element: "#network",
+                    withLabels: true,
+                    layoutAttr: {
+                        charge: -3000,
+                        linkDistance: 150
+                    },
+                    nodeAttr: {
+                        r: 40
+                    },
+                    nodeStyle: {
+                        fill: function (n) {
+                            return colors[n.data.type];
+                        }
+                    },
+                    edgeStyle: {
+                        "stroke-width": 8
+                    },
+                    panZoom: {
+                        enabled: true,
+                        scale: false
+                    }
+                });
+            });
+        }
+
+        $("#refresh").click(genGraph);
+
+        var auto_bool = false;
+        var interval;
+        $("#auto_refresh").click(function () {
+            $(this).prop("disabled", true);
+            if (auto_bool === true) {
+                auto_bool = false;
+                clearInterval(interval);
+                $(this).attr("value", "auto: off")
+            } else {
+                auto_bool = true;
+                interval = setInterval(genGraph, 10000);
+                $(this).attr("value", "auto: on")
+            }
+            $(this).prop("disabled", false);
+        });
+
+        (function ($) {
+            $.fn.serializeFormJSON = function () {
+                var o = {};
+                var a = this.serializeArray();
+                $.each(a, function () {
+                    if (o[this.name]) {
+                        if (!o[this.name].push) {
+                            o[this.name] = [o[this.name]];
+                        }
+                        o[this.name].push(this.value || '');
+                    } else {
+                        o[this.name] = this.value || '';
+                    }
+                });
+                return o;
+            };
+        })(jQuery);
+
+        $("#new_node").submit(function (e) {
+            e.preventDefault();
+            var form = $(this);
+            form.find(".result").html("");
+            $.post('/api/nodes', JSON.stringify(form.serializeFormJSON()), function(data) {
+                   form.find(".result").html(data);
+            });
+        });
+
+        $("#get_node").submit(function (e) {
+            e.preventDefault();
+            var form = $(this);
+            form.find(".result").html("");
+            $.get("/api/nodes/" + form.find("input[name='name']").val(), function(data) {
+                   form.find(".result").html(JSON.stringify(data, null, 1));
+            });
+        });
+
+        $("#del_node").submit(function (e) {
+            e.preventDefault();
+            var form = $(this);
+            form.find(".result").html("");
+            $.ajax("/api/nodes/" + form.find("input[name='name']").val(), {
+                type:"DELETE",
+                success:function(data) {
+                   form.find(".result").html(data);
+                }
+            });
+        });
+
+        $("#update_node_config").submit(function (e) {
+            e.preventDefault();
+            var form = $(this);
+            form.find(".result").html("");
+            $.ajax("/api/nodes/" + form.find("input[name='name']").val(), {
+                type:"PATCH",
+                data: JSON.stringify({
+                    "manager_address": form.find("input[name='manager_address']").val(),
+                    "manager_port": form.find("input[name='manager_port']").val(),
+                    "report_each": form.find("input[name='report_each']").val(),
+                    "strategy": form.find("select[name='strategy_type']").val()
+                }),
+                success:function(data) {
+                   form.find(".result").html(JSON.stringify(data, null, 1));
+                }
+            });
+        });
+
+        $("#new_link").submit(function (e) {
+            e.preventDefault();
+            var form = $(this);
+            form.find(".result").html("");
+            $.post('/api/links', JSON.stringify(form.serializeFormJSON()), function(data) {
+                   form.find(".result").html(data);
+            });
+        });
+
+        $("#get_link").submit(function (e) {
+            e.preventDefault();
+            var form = $(this);
+            form.find(".result").html("");
+            $.get("/api/links/" + form.find("input[name='source']").val() + "/" + form.find("input[name='target']").val(), function(data) {
+                   form.find(".result").html(JSON.stringify(data));
+            });
+        });
+
+        $("#del_link").submit(function (e) {
+            e.preventDefault();
+            var form = $(this);
+            form.find(".result").html("");
+            $.ajax("/api/links/" + form.find("input[name='source']").val() + "/" + form.find("input[name='target']").val(), {
+                type:"DELETE",
+                success:function(data) {
+                   form.find(".result").html(data);
+                }
+            });
+        });
+
+        $("#scale_node").submit(function (e) {
+            e.preventDefault();
+            var form = $(this);
+            form.find(".result").html("");
+            $.ajax("/api/scale/" + form.find("input[name='name']").val(), {
+                type:"PUT",
+                data : form.find("input[name='number']").val(),
+                success:function(data) {
+                   form.find(".result").html(data);
+                }
+            });
+        });
+
+        genGraph();
+    });
+</script>

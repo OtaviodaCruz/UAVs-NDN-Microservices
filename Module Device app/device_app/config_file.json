@@ -1,0 +1,28 @@
+{
+    "_comment": 
+    {
+        "device_type": "[uav, commander, soldier, tank]",
+
+        "network_role": "[producer, consumer, router]",
+
+        "resources":
+        {
+            "cpu": "follow kubenetes standart [m]",
+    
+            "memory": "follow kubenetes standart [M]" 
+        },
+        "position_in_formation": "[vanguard, rear, command]"
+    },
+
+    "device_type": "uav",
+
+    "network_role": "router", 
+
+    "resources":
+    {
+        "cpu": "2000m",
+
+        "memory": "3M" 
+    },
+    "position_in_formation": "vanguard"
+}
