@@ -27,6 +27,8 @@ for value in rttList:
 # create 
 x = list(range(len(rttFinal)))
 #plt.plot(x, rttFinal)  
+
+plt.rc('pdf',fonttype = 42)
 plt.bar(x, rttFinal)
 
 #plt.xticks(np.arange(min(x), max(x)+1, 1.0))  # Set label locations.
